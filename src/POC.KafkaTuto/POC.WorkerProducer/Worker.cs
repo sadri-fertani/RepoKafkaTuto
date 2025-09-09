@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace POC.WorkerProducer;
 
-public class Worker(ILogger<Worker> logger, IOptions<KafkaOptions> kafkaOptions) : BackgroundService
+public class Worker(ILogger<Worker> logger, IOptions<KafkaOptions> kafkaOptions, IHostEnvironment environment) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -13,7 +13,11 @@ public class Worker(ILogger<Worker> logger, IOptions<KafkaOptions> kafkaOptions)
         {
             BootstrapServers = kafkaOptions.Value.BootstrapServers,
             Acks = kafkaOptions.Value.Acks,
-            EnableIdempotence = kafkaOptions.Value.EnableIdempotence
+            EnableIdempotence = kafkaOptions.Value.EnableIdempotence,
+            SecurityProtocol = environment.IsProduction() ? SecurityProtocol.SaslPlaintext : null,
+            SaslMechanism = environment.IsProduction() ? SaslMechanism.Plain : null,
+            SaslUsername = environment.IsProduction() ? kafkaOptions.Value.Username : null,
+            SaslPassword = environment.IsProduction() ? kafkaOptions.Value.Password : null
         };
 
         var id = 0;
@@ -31,7 +35,7 @@ public class Worker(ILogger<Worker> logger, IOptions<KafkaOptions> kafkaOptions)
 
             var dr = await producer.ProduceAsync
                 (
-                    "orders.raw",
+                    kafkaOptions.Value.Topic,
                     new Message<string, string>
                     {
                         Key = Guid.NewGuid().ToString(),

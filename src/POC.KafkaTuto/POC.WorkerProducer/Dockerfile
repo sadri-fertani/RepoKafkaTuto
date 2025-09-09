@@ -10,10 +10,10 @@ WORKDIR /app
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["POC.WorkerProducer/POC.WorkerProducer.csproj", "POC.WorkerProducer/"]
-RUN dotnet restore "./POC.WorkerProducer/POC.WorkerProducer.csproj"
+COPY ["POC.WorkerProducer.csproj", "."]
+RUN dotnet restore "./POC.WorkerProducer.csproj"
 COPY . .
-WORKDIR "/src/POC.WorkerProducer"
+WORKDIR "/src"
 RUN dotnet build "./POC.WorkerProducer.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # Cette étape permet de publier le projet de service à copier dans la phase finale

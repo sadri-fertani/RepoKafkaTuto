@@ -1,0 +1,35 @@
+replicaCount: 1
+
+namespace: poc-space
+
+image:
+  repository: sadrifertani/kafkaproducer
+  tag: latest
+  pullPolicy: Always
+
+containerPort: 8000
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+ingress:
+  enabled: false
+  
+env:
+  - name: "ASPNETCORE_ENVIRONMENT"
+    value: "Production"
+  - name: "Kafka__BootstrapServers"
+    value: "kafka.kafka.svc.cluster.local:9092"
+  - name: "Kafka__Topic"
+    value: "orders.raw-prod"
+  - name: "Kafka__Username"
+    value: "user1"
+  - name: "Kafka__Password"
+    valueFrom:
+      secretKeyRef:
+        name: kafka-secret
+        key: Kafka__Password
+    
+resources: {}

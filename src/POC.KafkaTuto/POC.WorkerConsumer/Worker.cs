@@ -4,7 +4,7 @@ using POC.WorkerConsumer.Options;
 
 namespace POC.WorkerConsumer;
 
-public class Worker(ILogger<Worker> logger, IOptions<KafkaOptions> kafkaOptions) : BackgroundService
+public class Worker(ILogger<Worker> logger, IOptions<KafkaOptions> kafkaOptions, IHostEnvironment environment) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -17,7 +17,11 @@ public class Worker(ILogger<Worker> logger, IOptions<KafkaOptions> kafkaOptions)
             AutoOffsetReset = kafkaOptions.Value.AutoOffsetReset,
             EnableAutoCommit = kafkaOptions.Value.EnableAutoCommit,
             MaxPollIntervalMs = kafkaOptions.Value.MaxPollIntervalMs,
-            SessionTimeoutMs = kafkaOptions.Value.SessionTimeoutMs
+            SessionTimeoutMs = kafkaOptions.Value.SessionTimeoutMs,
+            SecurityProtocol = environment.IsProduction() ? SecurityProtocol.SaslPlaintext : null,
+            SaslMechanism = environment.IsProduction() ? SaslMechanism.Plain : null,
+            SaslUsername = environment.IsProduction() ? kafkaOptions.Value.Username : null,
+            SaslPassword = environment.IsProduction() ? kafkaOptions.Value.Password : null
         };
 
         logger.LogInformation("Worker Consumer running at: {time}", DateTimeOffset.Now);
@@ -26,7 +30,7 @@ public class Worker(ILogger<Worker> logger, IOptions<KafkaOptions> kafkaOptions)
                 .SetErrorHandler((_, e) => logger.LogError("Kafka error: {Error}", e))
                 .Build();
 
-        consumer.Subscribe("orders.raw");
+        consumer.Subscribe(kafkaOptions.Value.Topic);
 
         try
         {
