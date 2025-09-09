@@ -62,3 +62,10 @@ kubectl get pods
 kubectl exec -it curl-test -- /bin/sh
 > curl http://monapi-service.api-space.svc.cluster.local/get-config
 ```
+
+## Traces
+![alt text](./docs/lst-pods-image.png)
+
+![alt text](./docs/pod-consumer-image.png)
+
+![alt text](./docs/pod-producer-image.png)
